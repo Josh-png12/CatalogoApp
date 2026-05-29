@@ -146,7 +146,7 @@ export function Header({ onSearchOpen, onWishlistOpen }: HeaderProps) {
             {/* Search */}
             <button
               onClick={onSearchOpen}
-              className="hidden md:flex h-9 w-9 items-center justify-center rounded-full transition-colors"
+              className="flex h-9 w-9 items-center justify-center rounded-full transition-colors"
               style={{ color: iconColor }}
               onMouseEnter={(e) => { e.currentTarget.style.background = iconHoverBg }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
@@ -155,7 +155,7 @@ export function Header({ onSearchOpen, onWishlistOpen }: HeaderProps) {
               <Search className="h-4 w-4" />
             </button>
 
-            {/* Wishlist */}
+            {/* Wishlist — desktop only */}
             <button
               onClick={onWishlistOpen}
               className="hidden md:flex relative h-9 w-9 items-center justify-center rounded-full transition-colors"
@@ -185,7 +185,7 @@ export function Header({ onSearchOpen, onWishlistOpen }: HeaderProps) {
             {/* Cart */}
             <button
               onClick={openCart}
-              className={`relative hidden md:flex h-9 w-9 items-center justify-center rounded-full transition-colors ${badgeBounce ? 'animate-wiggle' : ''}`}
+              className={`relative flex h-9 w-9 items-center justify-center rounded-full transition-colors ${badgeBounce ? 'animate-wiggle' : ''}`}
               style={{ color: iconColor }}
               onMouseEnter={(e) => { e.currentTarget.style.background = iconHoverBg }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}

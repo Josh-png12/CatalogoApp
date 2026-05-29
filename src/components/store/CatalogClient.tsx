@@ -127,9 +127,9 @@ export function CatalogClient({ initialProducts, initialCategories }: CatalogCli
             <Fragment key={product.id}>
               {/* Editorial card every 8 products */}
               {i > 0 && i % 8 === 0 && (
-                <RevealOnScroll delay={0}>
+                <RevealOnScroll delay={0} className="col-span-2">
                   <div
-                    className="col-span-2 flex flex-col justify-center"
+                    className="flex flex-col justify-center"
                     style={{
                       background: 'rgba(233,30,140,0.04)',
                       padding: 24,

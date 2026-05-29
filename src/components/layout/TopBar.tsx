@@ -34,8 +34,8 @@ export function TopBar() {
       {/* Marquee track */}
       <div className="flex items-center" style={{ whiteSpace: 'nowrap' }}>
         <div
-          className="flex items-center animate-marquee"
-          style={{ animation: 'marquee 30s linear infinite' }}
+          className="flex items-center"
+          style={{ animation: 'marquee 30s linear infinite', whiteSpace: 'nowrap' }}
         >
           {repeated.map((msg, i) => (
             <span key={i} className="flex items-center" style={{ fontSize: 11, color: 'white', letterSpacing: '0.4px' }}>

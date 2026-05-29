@@ -113,46 +113,39 @@ export function HeroSection({ featuredProducts }: { featuredProducts: Product[] 
         }}
       />
 
-      <div
-        className="relative z-10 w-full max-w-7xl mx-auto flex items-center"
-        style={{ padding: 'clamp(48px,8vh,96px) clamp(20px,8vw,80px)' }}
-      >
+      <div className="relative z-10 w-full max-w-7xl mx-auto flex items-center px-5 md:px-10 lg:px-16 py-12 md:py-20">
         {/* LEFT COLUMN */}
-        <div className="flex-1 max-w-xl" style={{ paddingRight: 'clamp(24px,4vw,64px)' }}>
-          {/* Typewriter tagline */}
+        <div className="flex-1 min-w-0 md:pr-8 lg:pr-12">
+          {/* Tagline */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-            className="animate-typewriter inline-block mb-5"
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mb-4 hidden sm:block"
             style={{
-              fontSize: 11,
+              fontSize: 10,
               letterSpacing: '3px',
               color: 'var(--gold)',
               textTransform: 'uppercase',
-              maxWidth: '100%',
             }}
           >
-            {config.hero_badge_text ?? 'Cosméticos premium en Riohacha'}
+            {config.hero_badge_text ?? 'Cosméticos premium · Riohacha'}
           </motion.p>
 
           {/* Editorial H1 */}
           <h1
             className="mb-5"
-            style={{
-              fontFamily: 'var(--font-editorial)',
-              lineHeight: 0.95,
-            }}
+            style={{ fontFamily: 'var(--font-editorial)', lineHeight: 1.0 }}
           >
             {(['Descubre', 'tu', 'belleza', 'ideal.'] as const).map((word, i) => (
               <motion.span
                 key={word}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 + i * 0.15, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.5, delay: 0.4 + i * 0.12, ease: [0.16, 1, 0.3, 1] }}
                 className="block"
                 style={{
-                  fontSize: 'clamp(48px, 7vw, 88px)',
+                  fontSize: 'clamp(40px, 9vw, 88px)',
                   fontWeight: 400,
                   color: i === 2 ? 'var(--brand)' : 'white',
                   fontStyle: i === 2 ? 'italic' : 'normal',
@@ -184,9 +177,9 @@ export function HeroSection({ featuredProducts }: { featuredProducts: Product[] 
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 1.4 }}
-            className="flex flex-wrap gap-3"
-            style={{ marginBottom: 40 }}
+            transition={{ duration: 0.5, delay: 1.0 }}
+            className="flex flex-col sm:flex-row gap-3"
+            style={{ marginBottom: 32 }}
           >
             <a
               href="#catalogo"
@@ -243,22 +236,17 @@ export function HeroSection({ featuredProducts }: { featuredProducts: Product[] 
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 1.6 }}
-            className="flex items-center gap-0"
+            transition={{ duration: 0.5, delay: 1.2 }}
+            className="flex items-center"
           >
             {stats.map((s, i) => (
               <div key={i} className="flex items-center">
                 {i > 0 && (
-                  <div
-                    style={{ width: 1, height: 28, background: 'rgba(255,255,255,0.2)', margin: '0 20px' }}
-                  />
+                  <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.2)', margin: '0 12px' }} />
                 )}
                 <div>
-                  <p className="font-medium text-white" style={{ fontSize: 22 }}>{s.value}</p>
-                  <p
-                    className="uppercase"
-                    style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}
-                  >
+                  <p className="font-medium text-white" style={{ fontSize: 18 }}>{s.value}</p>
+                  <p className="uppercase" style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>
                     {s.label}
                   </p>
                 </div>

@@ -64,7 +64,7 @@ export function HowItWorksSection() {
           <p style={{ fontSize: 14, color: '#888' }}>Simple, rápido y sin complicaciones</p>
         </div>
 
-        <div className="relative grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="relative flex flex-col md:grid md:grid-cols-3 gap-6 md:gap-8">
           {/* Dashed connector — desktop only */}
           <div
             className="hidden md:block absolute"
@@ -87,7 +87,7 @@ export function HowItWorksSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: i * 0.2 }}
                 viewport={{ once: true }}
-                className="relative flex flex-col items-center text-center"
+                className="relative flex flex-row md:flex-col items-start md:items-center gap-4 md:gap-0 text-left md:text-center"
                 style={{ zIndex: 1 }}
               >
                 {/* Watermark number */}
@@ -109,24 +109,26 @@ export function HowItWorksSection() {
 
                 {/* Icon circle */}
                 <div
-                  className="relative flex items-center justify-center rounded-full mb-4"
-                  style={{ width: 72, height: 72, background: `${step.iconColor}15`, zIndex: 1 }}
+                  className="relative flex-shrink-0 flex items-center justify-center rounded-full md:mb-4"
+                  style={{ width: 56, height: 56, background: `${step.iconColor}15`, zIndex: 1 }}
                 >
                   {step.isWhatsApp ? (
                     <span style={{ color: step.iconColor }}>
                       <WhatsAppIcon />
                     </span>
                   ) : Icon ? (
-                    <Icon style={{ width: 28, height: 28, color: step.iconColor }} />
+                    <Icon style={{ width: 24, height: 24, color: step.iconColor }} />
                   ) : null}
                 </div>
 
-                <h3 style={{ fontSize: 15, fontWeight: 600, color: '#1a1a1a', marginBottom: 6 }}>
-                  {step.title}
-                </h3>
-                <p style={{ fontSize: 13, color: '#888', lineHeight: 1.7, maxWidth: 200 }}>
-                  {step.description}
-                </p>
+                <div>
+                  <h3 style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', marginBottom: 4 }}>
+                    {step.title}
+                  </h3>
+                  <p style={{ fontSize: 13, color: '#888', lineHeight: 1.7 }}>
+                    {step.description}
+                  </p>
+                </div>
               </motion.div>
             )
           })}

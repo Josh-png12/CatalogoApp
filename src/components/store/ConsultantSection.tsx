@@ -224,14 +224,14 @@ export function ConsultantSection() {
             <div style={{ borderTop: '1px solid #FCE4F3', margin: '20px 0' }} />
 
             {/* Buttons */}
-            <div className="flex flex-wrap gap-3" style={{ marginBottom: 20 }}>
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3" style={{ marginBottom: 20 }}>
               {config.whatsapp_number && (
                 <a
                   href={waUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 font-medium text-white rounded-full transition-opacity hover:opacity-90 active:scale-95"
-                  style={{ background: '#25D366', fontSize: 14, padding: '12px 22px' }}
+                  className="flex items-center justify-center gap-2 font-medium text-white rounded-full transition-opacity hover:opacity-90 active:scale-95"
+                  style={{ background: '#25D366', fontSize: 14, padding: '12px 22px', minHeight: 48 }}
                 >
                   <WhatsAppIcon />
                   Pedir por WhatsApp

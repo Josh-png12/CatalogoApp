@@ -42,19 +42,19 @@ export function BenefitsSection() {
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, delay: i * 0.1 }}
               viewport={{ once: true }}
-              className="bg-white rounded-2xl p-5"
+              className="bg-white rounded-2xl p-3 md:p-5"
               style={{ border: '0.5px solid #E8E6DF' }}
             >
               <div
-                className="flex items-center justify-center rounded-full mb-3"
-                style={{ width: 44, height: 44, background: `${b.color}18` }}
+                className="flex items-center justify-center rounded-full mb-2"
+                style={{ width: 36, height: 36, background: `${b.color}18` }}
               >
-                <b.icon style={{ width: 22, height: 22, color: b.color }} />
+                <b.icon style={{ width: 18, height: 18, color: b.color }} />
               </div>
-              <p className="font-medium" style={{ fontSize: 14, color: '#1a1a1a', marginBottom: 4 }}>
+              <p className="font-medium" style={{ fontSize: 12, color: '#1a1a1a', marginBottom: 2 }}>
                 {b.title}
               </p>
-              <p style={{ fontSize: 12, color: '#888', lineHeight: 1.6 }}>{b.text}</p>
+              <p className="hidden sm:block" style={{ fontSize: 11, color: '#888', lineHeight: 1.5 }}>{b.text}</p>
             </motion.div>
           ))}
         </div>
