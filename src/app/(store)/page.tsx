@@ -8,7 +8,7 @@ import { BenefitsSection } from '@/components/store/BenefitsSection'
 import { HowItWorksSection } from '@/components/store/HowItWorksSection'
 import { FullWidthBanner } from '@/components/store/FullWidthBanner'
 import { TestimonialsSection } from '@/components/store/TestimonialsSection'
-import { SkinQuiz } from '@/components/store/SkinQuiz'
+import { StoreQuizSection } from '@/components/store/StoreQuizSection'
 import type { Product, Category, Promotion } from '@/types'
 
 function mergePromos(products: Product[], promos: Promotion[]): Product[] {
@@ -105,6 +105,9 @@ export default async function StorePage() {
         <CatalogClient initialProducts={products} initialCategories={categories} />
       </section>
 
+      {/* Quiz results + floating trigger */}
+      <StoreQuizSection products={products} />
+
       {/* 7. Testimonials */}
       <TestimonialsSection />
 
@@ -113,9 +116,6 @@ export default async function StorePage() {
 
       {/* 9. Consultant */}
       <ConsultantSection />
-
-      {/* Skin Quiz floating button (fixed, bottom-left) */}
-      <SkinQuiz products={products} />
     </>
   )
 }

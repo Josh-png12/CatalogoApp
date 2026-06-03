@@ -1,12 +1,95 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { ProductCard } from '@/components/store/ProductCard'
-import { useStoreConfig } from '@/context/StoreConfigContext'
 import type { Product } from '@/types'
+
+// ─── scoring helpers ──────────────────────────────────────────────────────────
+
+function normalize(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+}
+
+const RULES: Record<string, string[]> = {
+  // Skin type
+  Grasa:    ['limpiador', 'matificante', 'gel', 'oil-free', 'oil free', 'clear proof', 'poros'],
+  Seca:     ['humectante', 'hidratante', 'crema', 'nutritiva', 'repair', 'moisture'],
+  Mixta:    ['timewise', 'balanceador', 'tonico', '4 en 1', 'humectante'],
+  Normal:   ['timewise', 'antioxidante', 'protector', 'locion'],
+  Sensible: ['suave', 'calmante', 'micelar', 'karite', 'gentle'],
+  // Concerns (keys must match CONCERNS array exactly)
+  'Acné':           ['clear proof', 'limpiador', 'gel', 'matificante', 'poros'],
+  'Manchas':        ['clinical solutions', 'vitamina c', 'iluminar', 'brightener', 'ferulico'],
+  'Líneas finas':   ['repair', 'retinol', 'antiedad', 'timewise', 'volu-firm'],
+  'Hidratación':    ['humectante', 'hidratante', 'acido hialuronico', 'moisture'],
+  'Poros':          ['minimizador', 'clear proof', 'matificante', 'exfoliante'],
+  'Brillo excesivo':['matificante', 'polvo', 'fijador', 'oil-free'],
+  // Tones (makeup relevance)
+  'Muy claro': ['very light', 'light', 'porcelain', 'ivory', 'fair'],
+  'Claro':     ['light', 'beige', 'nude', 'ivory'],
+  'Medio claro':['light to medium', 'beige', 'natural'],
+  'Medio':     ['medium', 'medium to deep', 'natural', 'sand'],
+  'Oscuro':    ['deep', 'dark', 'espresso', 'cocoa'],
+  'Muy oscuro':['deep', 'very deep', 'dark', 'rich'],
+}
+
+export interface QuizProfile {
+  tone: string
+  skinType: string
+  concerns: string[]
+}
+
+export function getRecommendedProducts(
+  { tone, skinType, concerns }: QuizProfile,
+  allProducts: Product[]
+): Product[] {
+  const skinKw    = (RULES[skinType] ?? []).map(normalize)
+  const toneKw    = (RULES[tone]     ?? []).map(normalize)
+
+  const scored = allProducts.map((product) => {
+    const text = normalize(
+      `${product.name} ${product.description ?? ''} ${product.category?.name ?? ''}`
+    )
+    let score = 0
+
+    // +3 skin type match
+    if (skinKw.some((kw) => text.includes(kw))) score += 3
+
+    // +2 per concern match
+    concerns.forEach((concern) => {
+      const cKw = (RULES[concern] ?? []).map(normalize)
+      if (cKw.some((kw) => text.includes(kw))) score += 2
+    })
+
+    // +2 tone match (makeup)
+    if (toneKw.some((kw) => text.includes(kw))) score += 2
+
+    // +1 skincare category
+    const cat = normalize(product.category?.name ?? '')
+    if ((cat.includes('cuidado') || cat.includes('skin')) && skinKw.length > 0) score += 1
+
+    return { product, score }
+  })
+
+  const top = scored
+    .filter((s) => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8)
+    .map((s) => s.product)
+
+  if (top.length < 4) {
+    const featured = allProducts.filter((p) => p.featured && !top.some((t) => t.id === p.id))
+    return [...top, ...featured.slice(0, 4 - top.length)]
+  }
+  return top
+}
+
+// ─── quiz data ────────────────────────────────────────────────────────────────
 
 const TONES = [
   { label: 'Muy claro',   bg: '#FDDBB4', value: 'Muy claro' },
@@ -18,71 +101,49 @@ const TONES = [
 ]
 
 const SKIN_TYPES = [
-  { emoji: '💧', label: 'Seca',    desc: 'Se siente tirante, especialmente después de lavar', value: 'Seca' },
-  { emoji: '🫧', label: 'Grasa',   desc: 'Brilla, especialmente en la frente y nariz',         value: 'Grasa' },
-  { emoji: '⚖️', label: 'Mixta',   desc: 'Grasa en la zona T, normal en mejillas',             value: 'Mixta' },
-  { emoji: '✨', label: 'Normal',  desc: 'Bien equilibrada, sin problemas particulares',        value: 'Normal' },
+  { emoji: '💧', label: 'Seca',   desc: 'Se siente tirante, especialmente después de lavar', value: 'Seca' },
+  { emoji: '🫧', label: 'Grasa',  desc: 'Brilla, especialmente en la frente y nariz',        value: 'Grasa' },
+  { emoji: '⚖️', label: 'Mixta',  desc: 'Grasa en la zona T, normal en mejillas',            value: 'Mixta' },
+  { emoji: '✨', label: 'Normal', desc: 'Bien equilibrada, sin problemas particulares',       value: 'Normal' },
 ]
 
 const CONCERNS = ['Hidratación', 'Manchas', 'Poros', 'Brillo excesivo', 'Líneas finas', 'Acné']
 
+// ─── component ───────────────────────────────────────────────────────────────
+
 interface Props {
   products: Product[]
+  onResults: (products: Product[], profile: QuizProfile) => void
 }
 
-export function SkinQuiz({ products }: Props) {
-  const config = useStoreConfig()
-  const [open, setOpen]           = useState(false)
-  const [step, setStep]           = useState(1)
-  const [tone, setTone]           = useState('')
-  const [skinType, setSkinType]   = useState('')
-  const [concerns, setConcerns]   = useState<string[]>([])
-  const [loading, setLoading]     = useState(false)
-  const [results, setResults]     = useState<Product[] | null>(null)
-  const resultsRef                = useRef<HTMLDivElement>(null)
-
-  const showResults = step === 4 && !loading && results !== null
-
-  useEffect(() => {
-    if (showResults && resultsRef.current) {
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 300)
-    }
-  }, [showResults])
+export function SkinQuiz({ products, onResults }: Props) {
+  const [open, setOpen]         = useState(false)
+  const [step, setStep]         = useState(1)
+  const [tone, setTone]         = useState('')
+  const [skinType, setSkinType] = useState('')
+  const [concerns, setConcerns] = useState<string[]>([])
 
   const reset = () => {
     setStep(1); setTone(''); setSkinType(''); setConcerns([])
-    setLoading(false); setResults(null)
   }
 
   const handleClose = () => { reset(); setOpen(false) }
 
-  const toggleConcern = (c: string) => {
+  const toggleConcern = (c: string) =>
     setConcerns((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c])
-  }
 
   const handleFinish = () => {
-    setLoading(true)
     setStep(4)
-    const keywords = [tone, skinType, ...concerns].map((s) => s.toLowerCase())
-    const matched = products.filter((p) => {
-      const text = `${p.name} ${p.description ?? ''} ${p.category?.name ?? ''}`.toLowerCase()
-      return keywords.some((kw) => text.includes(kw))
-    })
-    const recommended = matched.length >= 2 ? matched.slice(0, 4) : products.slice(0, 4)
-    setTimeout(() => { setResults(recommended); setLoading(false) }, 1500)
+    const recommended = getRecommendedProducts({ tone, skinType, concerns }, products)
+    setTimeout(() => {
+      onResults(recommended, { tone, skinType, concerns })
+      handleClose()
+    }, 1500)
   }
-
-  const waUrl = config.whatsapp_number
-    ? `https://wa.me/${config.whatsapp_number}?text=${encodeURIComponent(
-        `Hola ${config.consultant_name ?? 'Angélica'}! Hice el quiz y tengo tono ${tone}, piel ${skinType}. Me gustaría que me recomiendes productos 💄`
-      )}`
-    : '#'
 
   return (
     <>
-      {/* Floating trigger button */}
+      {/* Floating trigger */}
       <motion.button
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -113,13 +174,13 @@ export function SkinQuiz({ products }: Props) {
 
           <ScrollArea className="flex-1">
             <div className="px-6 py-6">
-              {/* Progress */}
+              {/* Progress bar */}
               <div className="flex gap-1.5 mb-6">
                 {[1, 2, 3].map((s) => (
                   <div
                     key={s}
                     className="h-1 flex-1 rounded-full transition-all duration-500"
-                    style={{ background: s < step || (step === 4 && s <= 3) ? 'var(--brand)' : '#e5e7eb' }}
+                    style={{ background: s < step || step === 4 ? 'var(--brand)' : '#e5e7eb' }}
                   />
                 ))}
               </div>
@@ -127,13 +188,7 @@ export function SkinQuiz({ products }: Props) {
               <AnimatePresence mode="wait">
                 {/* Step 1: Tone */}
                 {step === 1 && (
-                  <motion.div
-                    key="step1"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.25 }}
-                  >
+                  <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
                     <p className="font-medium text-gray-900 mb-6" style={{ fontSize: 18 }}>
                       ¿Cuál describe mejor tu tono de piel?
                     </p>
@@ -149,13 +204,8 @@ export function SkinQuiz({ products }: Props) {
                             background: tone === t.value ? 'var(--brand-light)' : '#f9fafb',
                           }}
                         >
-                          <div
-                            className="relative rounded-full flex items-center justify-center"
-                            style={{ width: 52, height: 52, background: t.bg }}
-                          >
-                            {tone === t.value && (
-                              <span className="text-white font-bold" style={{ fontSize: 18 }}>✓</span>
-                            )}
+                          <div className="relative rounded-full flex items-center justify-center" style={{ width: 52, height: 52, background: t.bg }}>
+                            {tone === t.value && <span className="text-white font-bold" style={{ fontSize: 18 }}>✓</span>}
                           </div>
                           <span style={{ fontSize: 11, color: '#4b5563' }}>{t.label}</span>
                         </button>
@@ -165,14 +215,7 @@ export function SkinQuiz({ products }: Props) {
                       disabled={!tone}
                       onClick={() => setStep(2)}
                       className="w-full uppercase font-medium disabled:opacity-40"
-                      style={{
-                        fontSize: 12,
-                        letterSpacing: '1px',
-                        padding: '13px 0',
-                        background: 'var(--brand)',
-                        color: 'white',
-                        borderRadius: 0,
-                      }}
+                      style={{ fontSize: 12, letterSpacing: '1px', padding: '13px 0', background: 'var(--brand)', color: 'white', borderRadius: 0 }}
                     >
                       Continuar
                     </button>
@@ -181,13 +224,7 @@ export function SkinQuiz({ products }: Props) {
 
                 {/* Step 2: Skin type */}
                 {step === 2 && (
-                  <motion.div
-                    key="step2"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.25 }}
-                  >
+                  <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
                     <p className="font-medium text-gray-900 mb-6" style={{ fontSize: 18 }}>
                       ¿Cuál es tu tipo de piel?
                     </p>
@@ -212,39 +249,19 @@ export function SkinQuiz({ products }: Props) {
                       ))}
                     </div>
                     <div className="flex gap-3">
-                      <button
-                        onClick={() => setStep(1)}
-                        style={{ flex: 1, fontSize: 12, letterSpacing: '1px', padding: '12px 0', border: '1px solid #e5e7eb', color: '#6b7280', borderRadius: 0, background: 'white' }}
-                      >
-                        ATRÁS
-                      </button>
-                      <button
-                        disabled={!skinType}
-                        onClick={() => setStep(3)}
-                        className="disabled:opacity-40"
-                        style={{ flex: 2, fontSize: 12, letterSpacing: '1px', padding: '12px 0', background: 'var(--brand)', color: 'white', borderRadius: 0 }}
-                      >
-                        CONTINUAR
-                      </button>
+                      <button onClick={() => setStep(1)} style={{ flex: 1, fontSize: 12, letterSpacing: '1px', padding: '12px 0', border: '1px solid #e5e7eb', color: '#6b7280', borderRadius: 0, background: 'white' }}>ATRÁS</button>
+                      <button disabled={!skinType} onClick={() => setStep(3)} className="disabled:opacity-40" style={{ flex: 2, fontSize: 12, letterSpacing: '1px', padding: '12px 0', background: 'var(--brand)', color: 'white', borderRadius: 0 }}>CONTINUAR</button>
                     </div>
                   </motion.div>
                 )}
 
                 {/* Step 3: Concerns */}
                 {step === 3 && (
-                  <motion.div
-                    key="step3"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.25 }}
-                  >
+                  <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
                     <p className="font-medium text-gray-900 mb-2" style={{ fontSize: 18 }}>
                       ¿Cuál es tu mayor preocupación?
                     </p>
-                    <p className="text-gray-400 mb-6" style={{ fontSize: 13 }}>
-                      Puedes seleccionar varias
-                    </p>
+                    <p className="text-gray-400 mb-6" style={{ fontSize: 13 }}>Puedes seleccionar varias</p>
                     <div className="flex flex-wrap gap-2 mb-6">
                       {CONCERNS.map((c) => {
                         const sel = concerns.includes(c)
@@ -268,94 +285,29 @@ export function SkinQuiz({ products }: Props) {
                       })}
                     </div>
                     <div className="flex gap-3">
-                      <button
-                        onClick={() => setStep(2)}
-                        style={{ flex: 1, fontSize: 12, padding: '12px 0', border: '1px solid #e5e7eb', color: '#6b7280', borderRadius: 0, background: 'white' }}
-                      >
-                        ATRÁS
-                      </button>
-                      <button
-                        onClick={handleFinish}
-                        style={{ flex: 2, fontSize: 12, letterSpacing: '1px', padding: '12px 0', background: 'var(--brand)', color: 'white', borderRadius: 0 }}
-                      >
-                        VER RESULTADOS
-                      </button>
+                      <button onClick={() => setStep(2)} style={{ flex: 1, fontSize: 12, padding: '12px 0', border: '1px solid #e5e7eb', color: '#6b7280', borderRadius: 0, background: 'white' }}>ATRÁS</button>
+                      <button onClick={handleFinish} style={{ flex: 2, fontSize: 12, letterSpacing: '1px', padding: '12px 0', background: 'var(--brand)', color: 'white', borderRadius: 0 }}>VER RESULTADOS</button>
                     </div>
                   </motion.div>
                 )}
 
-                {/* Step 4: Results */}
+                {/* Step 4: Analysing… */}
                 {step === 4 && (
-                  <motion.div
-                    key="step4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {loading ? (
-                      <div className="flex flex-col items-center justify-center py-16 gap-4">
-                        <div className="dots-pulse flex gap-2">
-                          <span className="w-2.5 h-2.5 rounded-full bg-brand inline-block" style={{ background: 'var(--brand)' }} />
-                          <span className="w-2.5 h-2.5 rounded-full bg-brand inline-block" style={{ background: 'var(--brand)' }} />
-                          <span className="w-2.5 h-2.5 rounded-full bg-brand inline-block" style={{ background: 'var(--brand)' }} />
-                        </div>
-                        <p style={{ fontSize: 14, color: '#9ca3af' }}>Analizando tu perfil de belleza…</p>
+                  <motion.div key="step4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+                    <div className="flex flex-col items-center justify-center py-20 gap-5">
+                      <div className="flex gap-2">
+                        {[0, 1, 2].map((i) => (
+                          <motion.span
+                            key={i}
+                            className="block rounded-full"
+                            style={{ width: 10, height: 10, background: 'var(--brand)' }}
+                            animate={{ opacity: [0.3, 1, 0.3], y: [0, -6, 0] }}
+                            transition={{ repeat: Infinity, duration: 0.9, delay: i * 0.2, ease: 'easeInOut' }}
+                          />
+                        ))}
                       </div>
-                    ) : (
-                      <motion.div
-                        key="results-content"
-                        initial={{ opacity: 0, y: 18 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, ease: 'easeOut' }}
-                      >
-                        <div className="text-center mb-6">
-                          <p
-                            style={{
-                              fontFamily: 'var(--font-editorial)',
-                              fontSize: 24,
-                              marginBottom: 8,
-                            }}
-                          >
-                            Tu perfil de belleza
-                          </p>
-                          <div
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
-                            style={{ background: 'var(--brand-light)', fontSize: 13, color: 'var(--brand)' }}
-                          >
-                            Tono {tone} · Piel {skinType}
-                            {concerns.length > 0 && ` · ${concerns.slice(0, 2).join(', ')}`}
-                          </div>
-                        </div>
-
-                        <p className="font-medium text-gray-700 mb-4" style={{ fontSize: 14 }}>
-                          Productos recomendados para ti
-                        </p>
-                        <div ref={resultsRef} className="grid grid-cols-2 gap-3 mb-6">
-                          {(results ?? []).map((p) => (
-                            <ProductCard key={p.id} product={p} />
-                          ))}
-                        </div>
-
-                        <div className="space-y-3">
-                          <button
-                            onClick={() => { handleClose(); document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' }) }}
-                            className="w-full uppercase font-medium"
-                            style={{ fontSize: 12, letterSpacing: '1px', padding: '13px 0', background: 'var(--brand)', color: 'white', borderRadius: 0 }}
-                          >
-                            Ver todos los productos para mi piel
-                          </button>
-                          <a
-                            href={waUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block w-full text-center uppercase font-medium"
-                            style={{ fontSize: 12, letterSpacing: '1px', padding: '13px 0', background: '#25D366', color: 'white', borderRadius: 0 }}
-                          >
-                            Pedir asesoría personalizada
-                          </a>
-                        </div>
-                      </motion.div>
-                    )}
+                      <p style={{ fontSize: 15, color: '#6b7280' }}>Analizando tu perfil de belleza…</p>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
