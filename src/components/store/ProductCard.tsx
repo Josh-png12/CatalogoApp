@@ -21,7 +21,7 @@ export function ProductCard({ product }: { product: Product }) {
   const primaryImage   = product.images?.find((img) => img.is_primary) ?? product.images?.[0]
   const isNew          = (() => {
     const created = (product as unknown as { created_at?: string }).created_at
-    return created ? Date.now() - new Date(created).getTime() < 7 * 24 * 60 * 60 * 1000 : false
+    return created ? Date.now() - new Date(created).getTime() < 15 * 24 * 60 * 60 * 1000 : false
   })()
   const outOfStock     = product.stock === 0
   const hasPromo       = hasActivePromo(product)
@@ -216,6 +216,13 @@ export function ProductCard({ product }: { product: Product }) {
         ) : (
           <p className="font-medium text-gray-900" style={{ fontSize: 14 }}>
             {formatCOP(product.price)}
+          </p>
+        )}
+
+        {/* Low-stock badge (Part 2) */}
+        {!outOfStock && product.stock <= 5 && (
+          <p className="font-medium mt-1" style={{ fontSize: 11, color: '#dc2626' }}>
+            🔥 ¡Solo quedan {product.stock} unidades!
           </p>
         )}
 

@@ -3,15 +3,80 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Minus, Plus, ShoppingCart, MessageCircle } from 'lucide-react'
+import { Minus, Plus, ShoppingCart, MessageCircle, CheckCircle2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/hooks/useCart'
 import { useStoreConfig } from '@/context/StoreConfigContext'
 import { buildWhatsAppURL } from '@/lib/whatsapp'
 import { formatCOP, getEffectivePrice, hasActivePromo } from '@/lib/utils'
+import { ProductCard } from '@/components/store/ProductCard'
 import type { Product, Variant } from '@/types'
 
-export function ProductDetail({ product }: { product: Product }) {
+// Part 1: scraping garbage cleaner
+function cleanDescription(raw: string): string {
+  if (!raw) return ''
+
+  const lines = raw.split('\n').map((l) => l.trim()).filter((l) => l.length > 0)
+
+  const detalleIdx = lines.findIndex((l) =>
+    l.toLowerCase().includes('detalle de producto')
+  )
+
+  if (detalleIdx !== -1) {
+    const after = lines.slice(detalleIdx + 1)
+    const endIdx = after.findIndex((l) =>
+      l.toLowerCase().includes('descargas') ||
+      l.toLowerCase().includes('recomendado para ti') ||
+      l.toLowerCase().includes('tarjeta de producto') ||
+      l.toLowerCase().includes('ingredientes') ||
+      l.toLowerCase().includes('consejos') ||
+      l.toLowerCase().includes('cómo funciona')
+    )
+    const descLines = endIdx > 0 ? after.slice(0, endIdx) : after.slice(0, 3)
+    const cleaned = descLines
+      .filter((l) =>
+        l.length > 15 &&
+        !l.includes('SKU:') &&
+        !l.includes('Puntos:') &&
+        !l.includes('$ ') &&
+        !l.includes('Agregar a') &&
+        !l.includes('Cantidad') &&
+        !l.match(/^\d+\s*ml\.?$/)
+      )
+      .join(' ')
+      .trim()
+    if (cleaned.length > 15) return cleaned
+  }
+
+  return lines.find((l) =>
+    l.length > 40 &&
+    !l.includes('SKU:') &&
+    !l.includes('Inicio') &&
+    !l.includes('Explorar') &&
+    !l.includes('Puntos:') &&
+    !l.includes('$ ') &&
+    !l.includes('Agregar')
+  ) || ''
+}
+
+const TRUST_BADGES = [
+  { icon: '🚚', text: 'Entrega a domicilio en Riohacha' },
+  { icon: '✓',  text: 'Producto 100% original' },
+  { icon: '💬', text: 'Asesoría personalizada gratis' },
+]
+
+const WHY_POINTS = [
+  'Fórmula dermatológicamente probada',
+  'Resultados visibles desde la primera aplicación',
+  'Respaldado por Mary Kay International',
+]
+
+interface ProductDetailProps {
+  product: Product
+  relatedProducts?: Product[]
+}
+
+export function ProductDetail({ product, relatedProducts = [] }: ProductDetailProps) {
   const { addItem, openCart } = useCart()
   const config = useStoreConfig()
 
@@ -22,10 +87,13 @@ export function ProductDetail({ product }: { product: Product }) {
   const [quantity, setQuantity] = useState(1)
   const [added, setAdded] = useState(false)
 
-  const hasPromo = hasActivePromo(product)
+  const hasPromo      = hasActivePromo(product)
   const effectivePrice = getEffectivePrice(product)
-  const unitPrice = effectivePrice + (selectedVariant?.price_delta ?? 0)
+  const unitPrice     = effectivePrice + (selectedVariant?.price_delta ?? 0)
   const baseUnitPrice = product.price + (selectedVariant?.price_delta ?? 0)
+
+  const description = cleanDescription(product.description ?? '')
+  const fallbackDesc = `Consulta a ${config.consultant_name} para más información sobre este producto.`
 
   const handleAdd = () => {
     if (product.stock === 0 || added) return
@@ -40,7 +108,7 @@ export function ProductDetail({ product }: { product: Product }) {
   const waUrl = config.whatsapp_number
     ? buildWhatsAppURL(
         config.whatsapp_number,
-        `Hola ${config.consultant_name}! Me interesa: ${product.name} 💄`
+        `Hola ${config.consultant_name}! Me interesa el producto: ${product.name} 💄\n¿Podrías darme más información?`
       )
     : '#'
 
@@ -48,9 +116,7 @@ export function ProductDetail({ product }: { product: Product }) {
     <div className="max-w-5xl mx-auto px-4 py-6 md:py-10">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 mb-6" style={{ fontSize: 12, color: '#9ca3af' }}>
-        <Link href="/" className="hover:text-gray-600 transition-colors">
-          Inicio
-        </Link>
+        <Link href="/" className="hover:text-gray-600 transition-colors">Inicio</Link>
         <span>/</span>
         {product.category && (
           <>
@@ -64,10 +130,7 @@ export function ProductDetail({ product }: { product: Product }) {
       <div className="grid md:grid-cols-2 gap-8 lg:gap-14">
         {/* LEFT: Images */}
         <div className="space-y-3">
-          <div
-            className="relative overflow-hidden"
-            style={{ aspectRatio: '1', background: '#F5F4F0' }}
-          >
+          <div className="relative overflow-hidden" style={{ aspectRatio: '1', background: '#F5F4F0' }}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeImage}
@@ -123,10 +186,7 @@ export function ProductDetail({ product }: { product: Product }) {
         {/* RIGHT: Info */}
         <div className="flex flex-col gap-5">
           {product.category && (
-            <p
-              className="uppercase font-medium tracking-widest"
-              style={{ fontSize: 10, color: 'var(--brand)' }}
-            >
+            <p className="uppercase font-medium tracking-widest" style={{ fontSize: 10, color: 'var(--brand)' }}>
               {product.category.name}
             </p>
           )}
@@ -138,28 +198,53 @@ export function ProductDetail({ product }: { product: Product }) {
             {product.name}
           </h1>
 
-          <div className="flex items-baseline gap-3">
-            <span className="font-bold" style={{ fontSize: 26, color: 'var(--brand)' }}>
-              {formatCOP(unitPrice)}
-            </span>
-            {hasPromo && (
-              <span className="text-gray-400 line-through" style={{ fontSize: 16 }}>
-                {formatCOP(baseUnitPrice)}
+          {/* Price + urgency counter (3B) */}
+          <div className="space-y-1.5">
+            <div className="flex items-baseline gap-3">
+              <span className="font-bold" style={{ fontSize: 26, color: 'var(--brand)' }}>
+                {formatCOP(unitPrice)}
               </span>
+              {hasPromo && (
+                <span className="text-gray-400 line-through" style={{ fontSize: 16 }}>
+                  {formatCOP(baseUnitPrice)}
+                </span>
+              )}
+            </div>
+            {product.stock > 0 && product.stock <= 10 && (
+              <p className="font-medium flex items-center gap-1" style={{ fontSize: 13, color: '#d97706' }}>
+                <motion.span
+                  animate={{ opacity: [1, 0.3, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
+                >
+                  ⚡
+                </motion.span>
+                ¡Solo quedan {product.stock} disponibles!
+              </p>
             )}
           </div>
 
-          {product.description && (
-            <p className="text-gray-500" style={{ fontSize: 14, lineHeight: 1.8 }}>
-              {product.description}
-            </p>
-          )}
+          {/* Description — cleaned (Part 1) */}
+          <p className="text-gray-500" style={{ fontSize: 14, lineHeight: 1.8 }}>
+            {description || fallbackDesc}
+          </p>
 
+          {/* Why this product (3C) */}
+          <div className="space-y-2">
+            {WHY_POINTS.map((point) => (
+              <div key={point} className="flex items-start gap-2">
+                <CheckCircle2
+                  className="flex-shrink-0 mt-0.5"
+                  style={{ width: 14, height: 14, color: 'var(--brand)' }}
+                />
+                <span className="text-gray-500" style={{ fontSize: 13 }}>{point}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Variants */}
           {product.variants?.length > 0 && (
             <div className="space-y-2">
-              <p className="font-medium text-gray-700" style={{ fontSize: 13 }}>
-                Opciones:
-              </p>
+              <p className="font-medium text-gray-700" style={{ fontSize: 13 }}>Opciones:</p>
               <div className="flex flex-wrap gap-2">
                 {product.variants.map((variant) => (
                   <button
@@ -179,8 +264,7 @@ export function ProductDetail({ product }: { product: Product }) {
                     {variant.value}
                     {variant.price_delta !== 0 && (
                       <span className="ml-1 opacity-60" style={{ fontSize: 11 }}>
-                        {variant.price_delta > 0 ? '+' : ''}
-                        {formatCOP(variant.price_delta)}
+                        {variant.price_delta > 0 ? '+' : ''}{formatCOP(variant.price_delta)}
                       </span>
                     )}
                   </button>
@@ -191,15 +275,11 @@ export function ProductDetail({ product }: { product: Product }) {
 
           <hr style={{ borderColor: '#f0ede8' }} />
 
+          {/* Quantity */}
           {product.stock > 0 && (
             <div className="flex items-center gap-4">
-              <span className="text-gray-500" style={{ fontSize: 13 }}>
-                Cantidad:
-              </span>
-              <div
-                className="flex items-center"
-                style={{ border: '1.5px solid #e5e7eb', borderRadius: 4 }}
-              >
+              <span className="text-gray-500" style={{ fontSize: 13 }}>Cantidad:</span>
+              <div className="flex items-center" style={{ border: '1.5px solid #e5e7eb', borderRadius: 4 }}>
                 <button
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={quantity <= 1}
@@ -231,6 +311,7 @@ export function ProductDetail({ product }: { product: Product }) {
             </div>
           )}
 
+          {/* Add to cart */}
           <button
             onClick={handleAdd}
             disabled={product.stock === 0}
@@ -274,6 +355,21 @@ export function ProductDetail({ product }: { product: Product }) {
             </AnimatePresence>
           </button>
 
+          {/* Trust badges (3A) */}
+          <div className="flex flex-col sm:flex-row gap-3 py-1">
+            {TRUST_BADGES.map((badge, i) => (
+              <div
+                key={badge.text}
+                className={`flex items-center gap-1.5 flex-1 ${i > 0 ? 'sm:border-l sm:pl-3' : ''}`}
+                style={{ borderColor: '#f0ede8' }}
+              >
+                <span style={{ fontSize: 14 }}>{badge.icon}</span>
+                <span className="text-gray-400" style={{ fontSize: 11, lineHeight: 1.3 }}>{badge.text}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* WhatsApp button (3D) */}
           {config.whatsapp_number && (
             <a
               href={waUrl}
@@ -291,11 +387,28 @@ export function ProductDetail({ product }: { product: Product }) {
               }}
             >
               <MessageCircle className="h-4 w-4" />
-              Consultar por WhatsApp
+              Pedir asesoría personalizada
             </a>
           )}
         </div>
       </div>
+
+      {/* Related products (3E) */}
+      {relatedProducts.length > 0 && (
+        <div className="mt-16 pt-10 border-t" style={{ borderColor: '#f0ede8' }}>
+          <h2
+            className="text-gray-900 mb-6"
+            style={{ fontFamily: 'Georgia, serif', fontSize: 22, fontWeight: 400 }}
+          >
+            También te puede interesar
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {relatedProducts.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -6,8 +6,9 @@ export function generateWhatsAppMessage(
   storeConfig?: Partial<Store>
 ): string {
   const lines: string[] = []
+  const storeName = storeConfig?.name ?? 'Angélica'
 
-  lines.push('Hola! Me gustaría hacer el siguiente pedido 🛍️')
+  lines.push(`¡Hola ${storeName}! 💄 Me gustaría hacer este pedido:`)
   lines.push('')
 
   let total = 0
@@ -23,7 +24,6 @@ export function generateWhatsAppMessage(
     }
     productLine += ` x${item.quantity} — ${formatCOP(unitPrice)}`
 
-    // Show original price if there's a discount
     if (item.final_price != null && item.final_price < basePrice) {
       const diff = Math.round(((basePrice - item.final_price) / basePrice) * 100)
       productLine += ` (antes ${formatCOP(basePrice)}, ${diff}% OFF)`
@@ -33,17 +33,17 @@ export function generateWhatsAppMessage(
   }
 
   lines.push('')
-  lines.push(`💰 Total estimado: ${formatCOP(total)}`)
+  lines.push(`💰 *Total: ${formatCOP(total)}*`)
   lines.push('')
-  lines.push('📋 Mis datos:')
-  lines.push(`Nombre: ${orderData.customer_name}`)
-  lines.push(`Dirección/Barrio: ${orderData.customer_address}`)
+  lines.push('📋 *Mis datos:*')
+  lines.push(`• Nombre: ${orderData.customer_name}`)
+  lines.push(`• Dirección: ${orderData.customer_address}`)
 
   if (orderData.customer_phone) {
-    lines.push(`Teléfono: ${orderData.customer_phone}`)
+    lines.push(`• Teléfono: ${orderData.customer_phone}`)
   }
   if (orderData.note) {
-    lines.push(`Nota: ${orderData.note}`)
+    lines.push(`• Nota: ${orderData.note}`)
   }
 
   lines.push('')

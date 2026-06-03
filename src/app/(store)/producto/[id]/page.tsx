@@ -56,5 +56,19 @@ export default async function ProductPage({
 
   if (!data) notFound()
 
-  return <ProductDetail product={data as unknown as Product} />
+  // Fetch up to 4 related products from the same category
+  let relatedProducts: Product[] = []
+  if (data.category_id) {
+    const { data: related } = await supabase
+      .from('products')
+      .select('*, images:product_images(*), variants(*), category:categories(*)')
+      .eq('store_id', storeId)
+      .eq('category_id', data.category_id)
+      .eq('active', true)
+      .neq('id', id)
+      .limit(4)
+    relatedProducts = (related ?? []) as unknown as Product[]
+  }
+
+  return <ProductDetail product={data as unknown as Product} relatedProducts={relatedProducts} />
 }

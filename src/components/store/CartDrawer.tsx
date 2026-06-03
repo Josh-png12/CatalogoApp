@@ -24,6 +24,16 @@ export function CartDrawer() {
   const count = totalItems()
   const total = totalPrice()
 
+  // 4B: total savings across discounted items
+  const savings = items.reduce((acc, item) => {
+    const orig = item.product.price + (item.variant?.price_delta ?? 0)
+    const final = item.final_price ?? orig
+    return acc + (orig - final) * item.quantity
+  }, 0)
+
+  const GOAL = 200_000
+  const progress = Math.min(100, (total / GOAL) * 100)
+
   return (
     <>
       <Sheet open={isOpen} onOpenChange={(open) => { if (!open) closeCart() }}>
@@ -132,28 +142,67 @@ export function CartDrawer() {
                 </div>
               </ScrollArea>
 
-              <div className="px-6 pb-6 space-y-4 border-t pt-4" style={{ borderColor: 'var(--brand-100)' }}>
+              <div className="px-6 pb-6 space-y-3 border-t pt-4" style={{ borderColor: 'var(--brand-100)' }}>
+                {/* 4A: progress bar toward $200.000 */}
+                {total < GOAL ? (
+                  <div>
+                    <p className="text-gray-500 mb-1.5" style={{ fontSize: 11 }}>
+                      Te faltan <strong>{formatCOP(GOAL - total)}</strong> para un pedido especial 🎁
+                    </p>
+                    <div style={{ height: 4, background: '#f0ede8', borderRadius: 2, overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          width: `${progress}%`,
+                          background: '#22c55e',
+                          transition: 'width 600ms ease',
+                          borderRadius: 2,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="font-medium" style={{ fontSize: 12, color: '#16a34a' }}>
+                    🎉 ¡Pedido especial desbloqueado!
+                  </p>
+                )}
+
                 <div className="flex justify-between items-baseline">
                   <span className="text-sm text-gray-500">Total estimado</span>
                   <span className="text-2xl font-bold" style={{ color: 'var(--brand-600)' }}>
                     {formatCOP(total)}
                   </span>
                 </div>
+
+                {/* 4B: savings summary */}
+                {savings > 0 && (
+                  <p className="font-medium" style={{ fontSize: 12, color: '#16a34a' }}>
+                    Ahorras: {formatCOP(savings)} en este pedido 💰
+                  </p>
+                )}
+
                 <button
                   onClick={clearCart}
                   className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   Vaciar carrito
                 </button>
+
+                {/* 4C: urgency WA button */}
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full flex items-center justify-center gap-2 py-3 text-white font-semibold rounded-xl text-base animate-pulse-ring"
+                  className="w-full flex flex-col items-center justify-center gap-0.5 py-3 text-white font-semibold rounded-xl"
                   style={{ background: '#25D366' }}
                   onClick={() => setShowCustomerForm(true)}
                 >
-                  <WhatsAppIcon />
-                  Pedir por WhatsApp
+                  <span className="flex items-center gap-2 text-base">
+                    <WhatsAppIcon />
+                    Pedir ahora por WhatsApp 🛍️
+                  </span>
+                  <span style={{ fontSize: 10, opacity: 0.85, fontWeight: 400 }}>
+                    Respuesta en menos de 1 hora
+                  </span>
                 </motion.button>
               </div>
             </>

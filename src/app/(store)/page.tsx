@@ -86,6 +86,22 @@ export default async function StorePage() {
 
       {/* 6. Full catalog */}
       <section id="catalogo" className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-10 md:py-16">
+        {/* Social proof stats (Part 5) */}
+        <div
+          className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-8 pb-6 border-b"
+          style={{ borderColor: '#f0ede8' }}
+        >
+          {[
+            { icon: '⭐', text: '4.9/5 calificación' },
+            { icon: '👥', text: '500+ clientas' },
+            { icon: '📦', text: 'Entrega rápida' },
+          ].map((stat) => (
+            <div key={stat.text} className="flex items-center gap-1.5">
+              <span>{stat.icon}</span>
+              <span className="text-gray-500" style={{ fontSize: 12 }}>{stat.text}</span>
+            </div>
+          ))}
+        </div>
         <CatalogClient initialProducts={products} initialCategories={categories} />
       </section>
 

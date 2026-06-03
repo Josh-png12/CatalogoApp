@@ -3,6 +3,7 @@ import { TopBar } from '@/components/layout/TopBar'
 import { Footer } from '@/components/layout/Footer'
 import { CartDrawer } from '@/components/store/CartDrawer'
 import { FloatingCartButton } from '@/components/store/FloatingCartButton'
+import { WhatsAppFloatButton } from '@/components/store/WhatsAppFloatButton'
 import { StoreShell } from '@/components/store/StoreShell'
 import { StoreConfigProvider } from '@/context/StoreConfigContext'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
@@ -51,6 +52,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         <Footer />
         <ErrorBoundary><CartDrawer /></ErrorBoundary>
         <FloatingCartButton />
+        <WhatsAppFloatButton />
       </div>
     </StoreConfigProvider>
   )
