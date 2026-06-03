@@ -6,9 +6,12 @@ export const metadata: Metadata = {
   title: 'Beauty by Angélica | Catálogo Digital',
   description: 'Catálogo de cosméticos premium con entrega a domicilio en Riohacha. Asesoría personalizada gratuita.',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon.png',
   },
 }
+
+
+
 
 export default function RootLayout({
   children,
