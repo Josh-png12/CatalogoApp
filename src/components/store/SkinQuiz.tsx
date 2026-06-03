@@ -79,8 +79,8 @@ export function SkinQuiz({ products }: Props) {
         onClick={() => { reset(); setOpen(true) }}
         className="fixed z-40 flex items-center gap-2 font-medium shadow-lg"
         style={{
-          bottom: 24,
-          left: 24,
+          bottom: 80,
+          left: 20,
           background: 'var(--warm-dark)',
           color: 'white',
           borderRadius: 28,

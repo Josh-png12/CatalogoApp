@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { ShoppingBag, Search, Heart, Menu, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/hooks/useCart'
@@ -30,6 +31,8 @@ export function Header({ onSearchOpen, onWishlistOpen }: HeaderProps) {
   const wCount = wishlistCount()
   const prevCount = useRef(count)
 
+  const pathname = usePathname()
+  const isHome   = pathname === '/'
   const [scrolled,    setScrolled]    = useState(false)
   const [mobileOpen,  setMobileOpen]  = useState(false)
   const [badgeBounce, setBadgeBounce] = useState(false)
@@ -56,8 +59,10 @@ export function Header({ onSearchOpen, onWishlistOpen }: HeaderProps) {
       )
     : '#'
 
-  const iconColor = scrolled ? '#1a1a1a' : 'white'
-  const iconHoverBg = scrolled ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.12)'
+  // transparent only on home before scroll
+  const transparent = isHome && !scrolled
+  const iconColor = transparent ? 'white' : '#1a1a1a'
+  const iconHoverBg = transparent ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)'
 
   return (
     <>
@@ -65,10 +70,10 @@ export function Header({ onSearchOpen, onWishlistOpen }: HeaderProps) {
         className="sticky top-0 z-40 w-full transition-all duration-300"
         style={{
           height: 56,
-          background: scrolled ? 'rgba(255,255,255,0.92)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(16px)' : 'none',
-          borderBottom: scrolled ? '0.5px solid rgba(0,0,0,0.08)' : '0.5px solid rgba(255,255,255,0.1)',
-          boxShadow: scrolled ? '0 1px 0 rgba(0,0,0,0.08)' : 'none',
+          background: transparent ? 'transparent' : 'rgba(255,255,255,0.92)',
+          backdropFilter: transparent ? 'none' : 'blur(16px)',
+          borderBottom: transparent ? '0.5px solid rgba(255,255,255,0.1)' : '0.5px solid rgba(0,0,0,0.08)',
+          boxShadow: transparent ? 'none' : '0 1px 0 rgba(0,0,0,0.08)',
         }}
       >
         <div className="flex h-full items-center justify-between px-5 max-w-7xl mx-auto">
@@ -91,7 +96,7 @@ export function Header({ onSearchOpen, onWishlistOpen }: HeaderProps) {
                     fontFamily: 'var(--font-editorial)',
                     fontSize: 20,
                     fontWeight: 400,
-                    color: scrolled ? 'var(--brand)' : 'white',
+                    color: transparent ? 'white' : 'var(--brand)',
                     letterSpacing: '0.5px',
                     lineHeight: 1,
                     transition: 'color 300ms ease',
@@ -104,7 +109,7 @@ export function Header({ onSearchOpen, onWishlistOpen }: HeaderProps) {
                     className="hidden sm:block"
                     style={{
                       fontSize: 10,
-                      color: scrolled ? '#9ca3af' : 'rgba(255,255,255,0.6)',
+                      color: transparent ? 'rgba(255,255,255,0.6)' : '#9ca3af',
                       letterSpacing: '0.5px',
                       transition: 'color 300ms ease',
                     }}
@@ -126,14 +131,14 @@ export function Header({ onSearchOpen, onWishlistOpen }: HeaderProps) {
                 style={{
                   fontSize: 11,
                   letterSpacing: '1px',
-                  color: scrolled ? '#6b7280' : 'rgba(255,255,255,0.85)',
+                  color: transparent ? 'rgba(255,255,255,0.85)' : '#6b7280',
                   paddingBottom: 2,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = scrolled ? '#1a1a1a' : 'white'
+                  e.currentTarget.style.color = transparent ? 'white' : '#1a1a1a'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = scrolled ? '#6b7280' : 'rgba(255,255,255,0.85)'
+                  e.currentTarget.style.color = transparent ? 'rgba(255,255,255,0.85)' : '#6b7280'
                 }}
               >
                 {link.label}
