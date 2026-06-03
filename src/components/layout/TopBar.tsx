@@ -28,7 +28,7 @@ export function TopBar() {
 
   return (
     <div
-      className="relative overflow-hidden flex items-center"
+      className="relative z-50 overflow-hidden flex items-center"
       style={{ background: 'var(--brand-dark)', height: 38 }}
     >
       {/* Marquee track */}

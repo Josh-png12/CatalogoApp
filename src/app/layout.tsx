@@ -5,6 +5,9 @@ import { Toaster } from '@/components/ui/toaster'
 export const metadata: Metadata = {
   title: 'Beauty by Angélica | Catálogo Digital',
   description: 'Catálogo de cosméticos premium con entrega a domicilio en Riohacha. Asesoría personalizada gratuita.',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({

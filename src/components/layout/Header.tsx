@@ -62,7 +62,7 @@ export function Header({ onSearchOpen, onWishlistOpen }: HeaderProps) {
   return (
     <>
       <header
-        className="sticky top-0 z-50 w-full transition-all duration-300"
+        className="sticky top-0 z-40 w-full transition-all duration-300"
         style={{
           height: 56,
           background: scrolled ? 'rgba(255,255,255,0.92)' : 'transparent',

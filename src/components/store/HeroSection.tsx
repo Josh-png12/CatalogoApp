@@ -75,10 +75,11 @@ export function HeroSection({ featuredProducts }: { featuredProducts: Product[] 
 
   return (
     <section
-      className="relative overflow-hidden"
+      className="relative overflow-hidden -mt-14"
       style={{
         background: 'radial-gradient(ellipse at 70% 50%, #4A0830 0%, #1A0A0E 60%)',
         minHeight: 'clamp(85vh, 100vh, 100vh)',
+        paddingTop: 56,
         display: 'flex',
         alignItems: 'center',
       }}
