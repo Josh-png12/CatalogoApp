@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -39,6 +39,17 @@ export function SkinQuiz({ products }: Props) {
   const [concerns, setConcerns]   = useState<string[]>([])
   const [loading, setLoading]     = useState(false)
   const [results, setResults]     = useState<Product[] | null>(null)
+  const resultsRef                = useRef<HTMLDivElement>(null)
+
+  const showResults = step === 4 && !loading && results !== null
+
+  useEffect(() => {
+    if (showResults && resultsRef.current) {
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 300)
+    }
+  }, [showResults])
 
   const reset = () => {
     setStep(1); setTone(''); setSkinType(''); setConcerns([])
@@ -291,7 +302,12 @@ export function SkinQuiz({ products }: Props) {
                         <p style={{ fontSize: 14, color: '#9ca3af' }}>Analizando tu perfil de belleza…</p>
                       </div>
                     ) : (
-                      <div>
+                      <motion.div
+                        key="results-content"
+                        initial={{ opacity: 0, y: 18 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, ease: 'easeOut' }}
+                      >
                         <div className="text-center mb-6">
                           <p
                             style={{
@@ -314,7 +330,7 @@ export function SkinQuiz({ products }: Props) {
                         <p className="font-medium text-gray-700 mb-4" style={{ fontSize: 14 }}>
                           Productos recomendados para ti
                         </p>
-                        <div className="grid grid-cols-2 gap-3 mb-6">
+                        <div ref={resultsRef} className="grid grid-cols-2 gap-3 mb-6">
                           {(results ?? []).map((p) => (
                             <ProductCard key={p.id} product={p} />
                           ))}
@@ -338,7 +354,7 @@ export function SkinQuiz({ products }: Props) {
                             Pedir asesoría personalizada
                           </a>
                         </div>
-                      </div>
+                      </motion.div>
                     )}
                   </motion.div>
                 )}
