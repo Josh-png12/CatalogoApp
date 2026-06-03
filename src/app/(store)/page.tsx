@@ -45,7 +45,7 @@ export default async function StorePage() {
       .eq('store_id', storeId)
       .eq('active', true)
       .order('sort_order', { foreignTable: 'categories', ascending: true })
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false }),
     supabase
       .from('categories')
       .select('*')
