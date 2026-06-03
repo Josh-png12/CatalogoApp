@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Heart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/hooks/useCart'
@@ -51,6 +52,7 @@ export function ProductCard({ product }: { product: Product }) {
       className="relative overflow-hidden cursor-pointer flex flex-col"
       style={{ background: 'white', borderRadius: 0 }}
     >
+      <Link href={`/producto/${product.id}`} className="flex flex-col flex-1">
       {/* Image zone */}
       <div
         className="relative overflow-hidden"
@@ -77,15 +79,22 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
         )}
 
-        {/* Hover dark overlay */}
+        {/* Hover overlay with "Ver detalle" */}
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none flex items-center justify-center"
           style={{
-            background: 'linear-gradient(transparent 55%, rgba(0,0,0,0.25) 100%)',
+            background: 'rgba(0,0,0,0.30)',
             opacity: hovered ? 1 : 0,
             transition: 'opacity 300ms ease',
           }}
-        />
+        >
+          <span
+            className="text-white font-medium uppercase"
+            style={{ fontSize: 11, letterSpacing: '1.5px' }}
+          >
+            Ver detalle
+          </span>
+        </div>
 
         {/* Hover add button (desktop) / always visible (mobile touch) */}
         <div
@@ -227,6 +236,7 @@ export function ProductCard({ product }: { product: Product }) {
           {outOfStock ? 'Sin stock' : added ? '✓ Agregado' : 'Agregar'}
         </button>
       </div>
+      </Link>
     </motion.div>
   )
 }
