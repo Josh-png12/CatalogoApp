@@ -12,7 +12,7 @@ import { trackEvent } from '@/lib/analytics'
 import { PromoBadge } from '@/components/store/PromoBadge'
 import type { Product } from '@/types'
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, wide = false }: { product: Product; wide?: boolean }) {
   const { addItem } = useCart()
   const { toggleWishlist, isInWishlist } = useWishlist()
   const [added,   setAdded]   = useState(false)
@@ -55,8 +55,8 @@ export function ProductCard({ product }: { product: Product }) {
       <Link href={`/producto/${product.id}`} className="flex flex-col flex-1">
       {/* Image zone */}
       <div
-        className="relative overflow-hidden"
-        style={{ aspectRatio: '1', background: 'var(--cream)' }}
+        className={`relative overflow-hidden ${wide ? 'aspect-[4/3]' : 'aspect-square md:aspect-[3/4]'}`}
+        style={{ background: 'var(--cream)' }}
       >
         {primaryImage ? (
           <Image
@@ -76,6 +76,24 @@ export function ProductCard({ product }: { product: Product }) {
             style={{ background: 'linear-gradient(135deg, #FCE4F3, #F9C2E6)' }}
           >
             ✨
+          </div>
+        )}
+
+        {/* Category pill badge — bottom-left of image */}
+        {product.category && (
+          <div
+            className="absolute bottom-2 left-2 pointer-events-none z-10"
+            style={{
+              background: 'var(--brand)',
+              color: 'white',
+              fontSize: 8,
+              letterSpacing: '0.5px',
+              padding: '3px 8px',
+              borderRadius: 20,
+              opacity: 0.9,
+            }}
+          >
+            {product.category.name}
           </div>
         )}
 
