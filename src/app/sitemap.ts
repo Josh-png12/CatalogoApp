@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { createClient } from '@supabase/supabase-js'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://beautybyao.com'
   const storeId = process.env.NEXT_PUBLIC_STORE_ID ?? ''
 
   const supabase = createClient(
@@ -17,7 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .eq('active', true)
 
   const productUrls: MetadataRoute.Sitemap = (products ?? []).map((p) => ({
-    url: `${baseUrl}/producto/${p.id}`,
+    url: `${BASE_URL}/producto/${p.id}`,
     lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.8,
@@ -25,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     {
-      url: baseUrl || '/',
+      url: BASE_URL,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 1.0,
