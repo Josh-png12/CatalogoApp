@@ -61,14 +61,33 @@ const EDITORIAL_MESSAGES = [
 
 const CHUNK_SIZE = 8
 
+const CATEGORY_PRIORITY: Record<string, number> = {
+  'MAQUILLAJE':           1,
+  'CUIDADO DE LA PIEL':   2,
+  'CUIDADO CORPORAL':     3,
+  'FRAGANCIAS PARA ELLA': 4,
+  'FRAGANCIAS PARA ÉL':   5,
+}
+
+function getCategoryPriority(product: Product): number {
+  const name = product.category?.name?.toUpperCase().trim() ?? ''
+  return CATEGORY_PRIORITY[name] ?? 99
+}
+
 export function CatalogClient({ initialProducts, initialCategories }: CatalogClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [sort, setSort]                         = useState('featured')
   const [sortOpen, setSortOpen]                 = useState(false)
 
-  const filtered = selectedCategory
+  const baseFiltered = selectedCategory
     ? initialProducts.filter((p) => p.category_id === selectedCategory)
     : initialProducts
+
+  // When showing all products with default sort, apply category priority order
+  const filtered =
+    selectedCategory === null && sort === 'featured'
+      ? [...baseFiltered].sort((a, b) => getCategoryPriority(a) - getCategoryPriority(b))
+      : baseFiltered
 
   const sorted = sortProducts(filtered, sort)
 
