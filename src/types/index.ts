@@ -60,6 +60,8 @@ export interface StoreConfig {
   stat_2_label?: string | null
   stat_3_number?: string | null
   stat_3_label?: string | null
+  hero_image_url?: string | null
+  hero_cta_text?: string | null
 }
 
 export interface Category {

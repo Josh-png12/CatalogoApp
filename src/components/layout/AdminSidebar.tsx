@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Package, Tag, Settings, LogOut, Menu, X, Store,
   ExternalLink, BadgePercent, ClipboardList, QrCode, Palette,
-  Users, Banknote, PackagePlus, Coins, Users2, Star,
+  Users, Banknote, PackagePlus, Coins, Users2, Star, FileEdit,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -38,6 +38,7 @@ const navSections = [
   {
     label: 'Configuración',
     items: [
+      { href: '/admin/contenido',    label: 'Contenido',    icon: FileEdit, exact: false, badge: null },
       { href: '/admin/diseno',       label: 'Diseño',       icon: Palette,  exact: false, badge: null },
       { href: '/admin/compartir',    label: 'Compartir',    icon: QrCode,   exact: false, badge: null },
       { href: '/admin/configuracion',label: 'Configuración',icon: Settings, exact: false, badge: null },

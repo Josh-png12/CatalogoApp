@@ -138,9 +138,9 @@ export function HeroSection({ featuredProducts }: { featuredProducts: Product[] 
             className="mb-5"
             style={{ fontFamily: 'var(--font-editorial)', lineHeight: 1.0 }}
           >
-            {(['Descubre', 'tu', 'belleza', 'ideal.'] as const).map((word, i) => (
+            {(config.hero_title ?? 'Descubre tu belleza ideal').split(/\s+/).filter(Boolean).map((word, i) => (
               <motion.span
-                key={word}
+                key={`${word}-${i}`}
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 + i * 0.12, ease: [0.16, 1, 0.3, 1] }}
@@ -202,7 +202,7 @@ export function HeroSection({ featuredProducts }: { featuredProducts: Product[] 
                 e.currentTarget.style.boxShadow = 'none'
               }}
             >
-              Explorar catálogo
+              {config.hero_cta_text ?? 'Explorar catálogo'}
             </a>
             {config.whatsapp_number && (
               <a
