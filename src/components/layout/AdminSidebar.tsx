@@ -22,7 +22,7 @@ const navSections = [
       { href: '/admin/productos',   label: 'Productos',    icon: Package,         exact: false, badge: null },
       { href: '/admin/categorias',  label: 'Categorías',   icon: Tag,             exact: false, badge: null },
       { href: '/admin/promociones', label: 'Promociones',  icon: BadgePercent,    exact: false, badge: null },
-      { href: '/admin/reseñas',     label: 'Reseñas',      icon: Star,            exact: false, badge: 'reviews' },
+      { href: '/admin/resenas',      label: 'Reseñas',      icon: Star,            exact: false, badge: 'reviews' },
     ],
   },
   {
